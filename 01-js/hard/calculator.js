@@ -16,6 +16,49 @@
   Once you've implemented the logic, test your code by running
 */
 
-class Calculator {}
+class Calculator {
+  constructor() {
+    this.result = 0;
+  }
+  add(n) {
+    this.result += n;
+  }
+  subtract(n) {
+    this.result -= n;
+  }
+  multiply(n) {
+    this.result *= n;
+  }
+  divide(n) {
+    if (n === 0) {
+      throw new Error("Division by zero is not allowed.");
+  }
+  this.result /= n;
+  }
+  clear(n) {
+    this.result = 0;
+  }
+  getResult() {
+    return this.result;
+  }
+  calculate(expression) {
+    // Remove all white spaces from the expression
+    const sanitizedExpression = expression.replace(/\s+/g, '');
+    
+    // Check for invalid characters
+    if (/[^0-9+\-*/().]/.test(sanitizedExpression)) {
+        throw new Error("Invalid characters in expression.");
+    }
+
+    // Evaluate the expression
+    try {
+        this.result = eval(sanitizedExpression);
+    } catch (error) {
+        throw new Error("Error in evaluating the expression.");
+    }
+
+    return this.result;
+}
+}
 
 module.exports = Calculator;

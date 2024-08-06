@@ -38,12 +38,145 @@
     - For any other route not defined in the server return 404
 
   Testing the server - run `npm run test-todoServer` command in terminal
- */
-  const express = require('express');
-  const bodyParser = require('body-parser');
+*/
+const express = require('express');
+const bodyParser = require('body-parser');
   
-  const app = express();
+const app = express();
+app.use(express());
   
-  app.use(bodyParser.json());
+app.use(bodyParser.json());
+
+let todos = [];
+
+const todoCheck = (obj) => {
+  let flag = false;
+  if(todos.length === 0) {
+    return flag;
+  }
+  todos.forEach((val) => {
+    if(val.id === obj.id) {
+      flag = true;
+    }
+  })
+  return flag;
+}
+const findTodo = (id) => {
+  let response = false;
+  if(todos.length === 0) {
+    return response;
+  }
+  todos.forEach((val) => {
+    if(val.id == id) {
+      response = val;
+      return response;
+    }
+  })
+  return response;
+}
+const updateTodo = (id,newObj) => {
+  let response = false;
+  if(todos.length === 0) {
+    return response;
+  }
+  todos.forEach((val) => {
+    if(val.id == id) {
+      val.title = newObj.title;
+      val.completed = newObj.completed;
+      val.description = newObj.description;
+      response = true;
+      return response;
+    }
+  }) 
+  return response;
+}
+const deleteTodo = (id) => {
+  let response = false;
+  todos.forEach((val,index) => {
+    if (val.id == id){
+      todos.splice(index, 1);
+      response = true;
+      return response;
+    }
+  })
+  return response;
+}
+
+app.delete('/todos/:id', (req,res) => {
+  const id = req.params.id;
+
+  const del = deleteTodo(id);
+  if(del) {
+    res.status(200).json({
+      msg: `Todo id:${id} deleted`,
+    });
+  }
+  res.status(404).json({
+    msg: 'Not Found',
+  })
+})
+app.put('/todos/:id', (req,res) => {
+  const title = req.body.title;
+  const compi = req.body.completed;
+  const desc = req.body.description;
+  const id = req.params.id;
+
+  const newObj = {
+    id: id,
+    title: title,
+    completed: compi,
+    description: desc,
+  }
+
+  const update = updateTodo(id,newObj);
+  if(update) {
+    res.status(200).json({
+      msg: `Todo id:${id} updated`,
+    });
+  }
+  res.status(404).json({
+    msg: 'Not Found',
+  })
+})
+app.post('/todos', (req,res) => {
+  const title = req.body.title;
+  const compi = req.body.completed;
+  const desc = req.body.description;
+  const id = Math.floor((Math.random() * 100) + 1);
+
+  const obj = {
+    id: id,
+    title: title,
+    completed: compi,
+    description: desc,
+  }
+
+  if(todoCheck(obj)) {
+    res.status(404).json({
+      msg: 'todo already exits',
+    })
+  } else {
+    todos.push(obj);
+    res.status(200).json({id: id});
+  }
+})
+app.get('/todos/:id', (req,res) => {
+  const id = req.params.id;
+
+  const ifTodo = findTodo(id);
+  if(ifTodo) {
+    res.status(200).json(ifTodo);
+  } else {
+    res.status(404).json({
+      msg: 'Not Found',
+    });
+  }
+})
+app.get('/todos', (req,res) => {
+  res.status(200).json(todos);
+})
+app.listen(3000,() => {
+  console.log(`server start`);  
+})
   
-  module.exports = app;
+module.exports = app;

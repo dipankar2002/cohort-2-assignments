@@ -40,6 +40,7 @@
   Testing the server - run `npm run test-todoServer` command in terminal
 */
 const express = require('express');
+const fs = require('fs');
 const bodyParser = require('body-parser');
   
 const app = express();
@@ -47,22 +48,30 @@ app.use(express());
   
 app.use(bodyParser.json());
 
-let todos = [];
+// let todos = [];
+async function readFileTodo() {
+  let read = fs.readFileSync('todos.json', 'utf-8');
+  const parsData = await JSON.parse(read);
+  return parsData;
+}
 
-const todoCheck = (obj) => {
+const todoCheck = async (obj) => {
   let flag = false;
+  let todos = await readFileTodo();
   if(todos.length === 0) {
     return flag;
   }
-  todos.forEach((val) => {
+  await todos.forEach((val) => {
     if(val.id === obj.id) {
       flag = true;
+      return flag;
     }
   })
   return flag;
 }
-const findTodo = (id) => {
+const findTodo = async (id) => {
   let response = false;
+  let todos = await readFileTodo();
   if(todos.length === 0) {
     return response;
   }
@@ -74,8 +83,9 @@ const findTodo = (id) => {
   })
   return response;
 }
-const updateTodo = (id,newObj) => {
+const updateTodo = async (id,newObj) => {
   let response = false;
+  let todos = await readFileTodo();
   if(todos.length === 0) {
     return response;
   }
@@ -85,19 +95,26 @@ const updateTodo = (id,newObj) => {
       val.completed = newObj.completed;
       val.description = newObj.description;
       response = true;
-      return response;
     }
-  }) 
+  })
+  const data = await JSON.stringify(todos);
+  fs.writeFile('todos.json', data, (err) => {
+    if (err) throw err;
+  })
   return response;
 }
-const deleteTodo = (id) => {
+const deleteTodo = async (id) => {
   let response = false;
+  let todos = await readFileTodo();
   todos.forEach((val,index) => {
     if (val.id == id){
       todos.splice(index, 1);
       response = true;
-      return response;
     }
+  })
+  const data = await JSON.stringify(todos);
+  fs.writeFile('todos.json', data, (err) => {
+    if (err) throw err;
   })
   return response;
 }
@@ -138,11 +155,13 @@ app.put('/todos/:id', (req,res) => {
     msg: 'Not Found',
   })
 })
-app.post('/todos', (req,res) => {
+app.post('/todos', async (req,res) => {
   const title = req.body.title;
   const compi = req.body.completed;
   const desc = req.body.description;
   const id = Math.floor((Math.random() * 100) + 1);
+
+  let todos = await readFileTodo();
 
   const obj = {
     id: id,
@@ -157,6 +176,10 @@ app.post('/todos', (req,res) => {
     })
   } else {
     todos.push(obj);
+    const data = await JSON.stringify(todos);
+    fs.writeFile('todos.json', data, (err) => {
+      if (err) throw err;
+    })
     res.status(200).json({id: id});
   }
 })
@@ -173,7 +196,8 @@ app.get('/todos/:id', (req,res) => {
   }
 })
 app.get('/todos', (req,res) => {
-  res.status(200).json(todos);
+  const data = readFileTodo();
+  res.status(200).json(data);
 })
 app.listen(3000,() => {
   console.log(`server start`);  
